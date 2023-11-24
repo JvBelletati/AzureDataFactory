@@ -1,0 +1,132 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Nome do Data Factory",
+			"defaultValue": "jvservicosbostonadf"
+		},
+		"AzureBlobStoragels_connectionString": {
+			"type": "secureString",
+			"metadata": "Cadeia de caracteres segura para 'connectionString' de 'AzureBlobStoragels'"
+		},
+		"AzureDataLakeStoragels_accountKey": {
+			"type": "secureString",
+			"metadata": "Cadeia de caracteres segura para 'accountKey' de 'AzureDataLakeStoragels'"
+		},
+		"AzureDataLakeStoragels_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://datalakebostonjv.dfs.core.windows.net/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureBlobStoragels')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureBlobStoragels_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStoragels')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStoragels_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStoragels_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_boston_sink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStoragels",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "bronze",
+						"fileSystem": "dadosboston"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStoragels')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_boston_src')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStoragels",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "dados_boston.zip",
+						"container": "servicosbostonzip"
+					},
+					"columnDelimiter": ",",
+					"compressionCodec": "ZipDeflate",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "PK\u0003\u0004\u0014\u0000\u0000\u0000\b\u0000�cxWu�����\u0001�W\u0000\b\u000e\u0000\u0000\u0000dados_2017.csv�is\u001bI�6�y�W�kc�o�\u0019\u0004�}���Y�.I�K�J;km&\u0003�\u0014�)\u0010��\u0010����=\"\u0013�\f$�T�(VOW���$<@�=��ǯ'��c9���t��qz3Z<��7��j6���",
+						"type": "String"
+					},
+					{
+						"name": "o�5~u=[��\u001b��b�q=�/G�H�ZO֛���fY~\\���b��g�h�����z=���~z(G��)7��|�",
+						"type": "String"
+					},
+					{
+						"name": "���|�/����p���b����1[\\O�S��4�w�����)\u001c��x����t���z��_Og��",
+						"type": "String"
+					},
+					{
+						"name": "f��\u0006ɼ���]-�w��M닏�r�\u0019^�z~��dy3zX���9|U�\f��.K�@�\u0013�\u0000�\u000f�{�p���\u0007��z�Y�o��n���G��\u001a�\u0016��u�SB\t�V[�̈\u0011�_\u0011",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStoragels')]"
+			]
+		}
+	]
+}
